@@ -1,6 +1,6 @@
 from scipy import sparse
 
-from yasem.splade_embedder import SpladeEmbedder
+from yasem import SpladeEmbedder
 
 SPLADE_MODEL = "naver/splade-v3"
 
