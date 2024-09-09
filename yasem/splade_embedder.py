@@ -202,3 +202,54 @@ class SpladeEmbedder:
         self, sentences: Union[str, List[str]], **kwargs
     ) -> Union[sparse.csr_matrix, torch.Tensor]:
         return self.encode(sentences, **kwargs)
+
+    def get_token_values(
+        self,
+        embedding: Union[sparse.csr_matrix, torch.Tensor, np.ndarray],
+        top_k: Optional[int] = None,
+    ) -> Dict[str, float]:
+        """
+        Get the token-value pairs from a SPLADE embedding.
+
+        Args:
+            embedding (Union[sparse.csr_matrix, torch.Tensor, np.ndarray]): The SPLADE embedding.
+            top_k (Optional[int]): If specified, return only the top k token-value pairs.
+
+        Returns:
+            Dict[str, float]: A dictionary mapping tokens to their corresponding values.
+        """
+        if isinstance(embedding, sparse.csr_matrix):
+            indices = embedding.indices
+            values = embedding.data
+        elif isinstance(embedding, torch.Tensor):
+            if embedding.is_sparse:
+                indices = embedding._indices().squeeze().cpu().numpy()
+                values = embedding._values().cpu().numpy()
+            else:
+                indices = embedding.nonzero().squeeze().cpu().numpy()
+                values = embedding[indices].cpu().numpy()
+        elif isinstance(embedding, np.ndarray):
+            if embedding.ndim > 1:
+                embedding = embedding.squeeze()
+            indices = np.nonzero(embedding)[0]
+            values = embedding[indices]
+        else:
+            raise ValueError(
+                "Embedding must be either scipy.sparse.csr_matrix, torch.Tensor, or np.ndarray"
+            )
+
+        token_values = {
+            self.tokenizer.convert_ids_to_tokens(int(idx)): float(val)
+            for idx, val in zip(indices, values)
+        }
+
+        if top_k is not None:
+            token_values = dict(
+                sorted(token_values.items(), key=lambda x: x[1], reverse=True)[:top_k]
+            )
+        else:
+            token_values = dict(
+                sorted(token_values.items(), key=lambda x: x[1], reverse=True)
+            )
+
+        return token_values  # type: ignore

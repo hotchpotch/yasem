@@ -26,6 +26,11 @@ def test_splade_embedder_np():
     assert similarity[0][1] > similarity[0][2]
     assert similarity[0][1] > similarity[1][2]
 
+    token_values = embedder.get_token_values(embeddings[0])
+    assert token_values["dog"]
+    assert token_values["dog"] > 0.0
+    assert token_values.get("ramen") is None
+
 
 def test_splade_embedder_torch():
     embedder = SpladeEmbedder(SPLADE_MODEL)
@@ -42,3 +47,8 @@ def test_splade_embedder_torch():
     assert similarity.shape == (3, 3)
     assert similarity[0][1] > similarity[0][2]
     assert similarity[0][1] > similarity[1][2]
+
+    token_values = embedder.get_token_values(embeddings[0])
+    assert token_values["dog"]
+    assert token_values["dog"] > 0.0
+    assert token_values.get("ramen") is None
