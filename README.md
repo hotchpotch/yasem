@@ -1,13 +1,13 @@
-# YASEM (Yet Another Splade|Sparse Embedder)
+## YASEM (Yet Another Splade|Sparse Embedder)
 
-YASEM is a simple and efficient library for executing SPLADE (Sparse Lexical and Expansion Model for Information Retrieval) and creating sparse vectors. It provides a straightforward interface inspired by SentenceTransformers for easy integration into your projects.
+YASEM is a simple and efficient library for executing SPLADE (Sparse Lexical and Expansion Model for Information Retrieval) and creating sparse vectors. It provides a straightforward interface inspired by [SentenceTransformers](https://sbert.net/) for easy integration into your projects.
 
 ## Why YASEM?
 
-- **Simplicity**: YASEM focuses on providing a clean and simple implementation of SPLADE without unnecessary complexity.
-- **Efficiency**: Generate sparse embeddings quickly and easily.
-- **Flexibility**: Works with both NumPy and PyTorch backends.
-- **Convenience**: Includes helpful utilities like `get_token_values` for inspecting feature representations.
+- Simplicity: YASEM focuses on providing a clean and simple implementation of SPLADE without unnecessary complexity.
+- Efficiency: Generate sparse embeddings quickly and easily.
+- Flexibility: Works with both NumPy and PyTorch backends.
+- Convenience: Includes helpful utilities like get_token_values for inspecting feature representations.
 
 ## Installation
 
@@ -35,17 +35,16 @@ sentences = [
     "Hello, I like a sushi",
 ]
 
-# Generate sparse embeddings
+# Generate embeddings
 embeddings = embedder.encode(sentences)
 
-# Compute similarity
+# Compute similarity (dot product)
 similarity = embedder.similarity(embeddings, embeddings)
 print(similarity)
 # [[148.62903569 106.88184372  18.86930016  22.87525314]
 #  [106.88184372 122.79656474  17.45339064  21.44758757]
 #  [ 18.86930016  17.45339064  61.00272733  40.92700849]
 #  [ 22.87525314  21.44758757  40.92700849  73.98511539]]
-
 
 # Inspect token values for the first sentence
 token_values = embedder.get_token_values(embeddings[0])
@@ -62,14 +61,14 @@ print(token_values)
 
 ## Features
 
-- Easy-to-use API inspired by [SentenceTransformers](https://sbert.net/)
-- Support for both NumPy (scipy.sparse) and PyTorch sparse tensors
-- Customizable similarity functions (dot product and cosine similarity)
+- Easy-to-use API inspired by SentenceTransformers
+- Support for both NumPy and PyTorch tensors
+- Efficient dot product similarity computation
 - Utility function to inspect token values in embeddings
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for the full license text. Copyright (c) 2024 Yuichi Tateno (@hotchpotch)
+This project is licensed under the MIT License. See the LICENSE file for the full license text. Copyright (c) 2024 Yuichi Tateno (@hotchpotch)
 
 ## Contributing
 

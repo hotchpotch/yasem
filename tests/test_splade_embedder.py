@@ -1,4 +1,6 @@
-from scipy import sparse
+# test_splade_embedder.py
+import numpy as np
+import torch
 
 from yasem import SpladeEmbedder
 
@@ -14,22 +16,17 @@ def test_splade_embedder_np():
     ]
     embeddings = embedder.encode(sentences, convert_to_numpy=True)
 
-    # Check if embeddings is a sparse matrix
-    assert sparse.issparse(embeddings), "Embeddings should be a scipy sparse matrix"
-    assert isinstance(
-        embeddings, sparse.csr_matrix
-    ), "Embeddings should be a CSR matrix"
+    assert isinstance(embeddings, np.ndarray), "Embeddings should be a numpy array"
 
-    # is sparse matrix check
     similarity = embedder.similarity(embeddings, embeddings)
     assert similarity.shape == (3, 3)
     assert similarity[0][1] > similarity[0][2]
     assert similarity[0][1] > similarity[1][2]
 
     token_values = embedder.get_token_values(embeddings[0])
-    assert token_values["dog"]
+    assert "dog" in token_values
     assert token_values["dog"] > 0.0
-    assert token_values.get("ramen") is None
+    assert "ramen" not in token_values
 
 
 def test_splade_embedder_torch():
@@ -40,8 +37,8 @@ def test_splade_embedder_torch():
         "Hello, I like a ramen",
     ]
     embeddings = embedder.encode(sentences, convert_to_numpy=False)
-    # embeddings is sparse tensor
-    assert embeddings.is_sparse  # type: ignore
+
+    assert isinstance(embeddings, torch.Tensor), "Embeddings should be a torch tensor"
 
     similarity = embedder.similarity(embeddings, embeddings)
     assert similarity.shape == (3, 3)
@@ -49,6 +46,6 @@ def test_splade_embedder_torch():
     assert similarity[0][1] > similarity[1][2]
 
     token_values = embedder.get_token_values(embeddings[0])
-    assert token_values["dog"]
+    assert "dog" in token_values
     assert token_values["dog"] > 0.0
-    assert token_values.get("ramen") is None
+    assert "ramen" not in token_values
