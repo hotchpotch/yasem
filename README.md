@@ -31,7 +31,8 @@ embedder = SpladeEmbedder("naver/splade-v3")
 sentences = [
     "Hello, my dog is cute",
     "Hello, my cat is cute",
-    "Hello, I like ramen",
+    "Hello, I like a ramen",
+    "Hello, I like a sushi",
 ]
 
 # Generate sparse embeddings
@@ -40,9 +41,10 @@ embeddings = embedder.encode(sentences)
 # Compute similarity
 similarity = embedder.similarity(embeddings, embeddings)
 print(similarity)
-# [[148.46356781 106.77744783  17.91641146]
-#  [106.77744783 122.72133482  16.49506931]
-#  [ 17.91641146  16.49506931  48.50924806]]
+# [[148.62903569 106.88184372  18.86930016  22.87525314]
+#  [106.88184372 122.79656474  17.45339064  21.44758757]
+#  [ 18.86930016  17.45339064  61.00272733  40.92700849]
+#  [ 22.87525314  21.44758757  40.92700849  73.98511539]]
 
 
 # Inspect token values for the first sentence
@@ -51,6 +53,11 @@ print(token_values)
 # {'hello': 6.89453125, 'dog': 6.48828125, 'cute': 4.6015625,
 #  'message': 2.38671875, 'greeting': 2.259765625,
 #    ...
+
+token_values = embedder.get_token_values(embeddings[3])
+print(token_values)
+# {'##shi': 3.63671875, 'su': 3.470703125, 'eat': 3.25,
+#  'hello': 2.73046875, 'you': 2.435546875, 'like': 2.26953125, 'taste': 1.8203125,
 ```
 
 ## Features
