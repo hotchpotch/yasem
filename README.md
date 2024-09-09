@@ -38,13 +38,14 @@ sentences = [
 # Generate embeddings
 embeddings = embedder.encode(sentences)
 
-# Compute similarity (dot product)
+# Compute similarity
 similarity = embedder.similarity(embeddings, embeddings)
 print(similarity)
 # [[148.62903569 106.88184372  18.86930016  22.87525314]
 #  [106.88184372 122.79656474  17.45339064  21.44758757]
 #  [ 18.86930016  17.45339064  61.00272733  40.92700849]
 #  [ 22.87525314  21.44758757  40.92700849  73.98511539]]
+
 
 # Inspect token values for the first sentence
 token_values = embedder.get_token_values(embeddings[0])
