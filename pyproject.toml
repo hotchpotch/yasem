@@ -1,9 +1,13 @@
 [tool.poetry]
 name = "yasem"
 version = "0.1.0"
-description = ""
+description = "YASEM - Yet Another Splade|Sparse Embedder - A simple and efficient library for SPLADE embeddings"
 authors = ["Yuichi Tateno <hotchpotch@gmail.com>"]
 readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/hotchpotch/yasem"
+repository = "https://github.com/hotchpotch/yasem"
+keywords = ["nlp", "embeddings", "splade", "sparse-vectors"]
 
 [tool.poetry.dependencies]
 python = ">=3.9"
@@ -14,7 +18,6 @@ scipy = ">=1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=6.0.0"
-
 
 [build-system]
 requires = ["poetry-core"]
