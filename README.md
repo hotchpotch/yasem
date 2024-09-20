@@ -37,6 +37,8 @@ sentences = [
 
 # Generate embeddings
 embeddings = embedder.encode(sentences)
+# or sparse csr matrix
+# embeddings = embedder.encode(sentences, convert_to_csr_matrix=True)
 
 # Compute similarity
 similarity = embedder.similarity(embeddings, embeddings)
@@ -63,7 +65,7 @@ print(token_values)
 ## Features
 
 - Easy-to-use API inspired by SentenceTransformers
-- Support for both NumPy and PyTorch tensors
+- Support for both NumPy and scipy.sparse.csr_matrix
 - Efficient dot product similarity computation
 - Utility function to inspect token values in embeddings
 

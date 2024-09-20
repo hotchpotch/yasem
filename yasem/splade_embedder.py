@@ -2,6 +2,7 @@ from typing import Dict, List, Literal, Optional, Union
 
 import numpy as np
 import torch
+from scipy.sparse import csr_matrix
 from tqdm import tqdm
 from transformers import AutoConfig, AutoModelForMaskedLM, AutoTokenizer
 
@@ -74,17 +75,24 @@ class SpladeEmbedder:
 
     def encode(
         self,
-        sentences: Union[str, List[str]],
+        sentences: List[str],
         batch_size: int = 32,
         show_progress_bar: bool = False,
-        convert_to_numpy: bool = True,
-    ) -> Union[np.ndarray, torch.Tensor]:
-        # Ensure sentences is a list
-        is_sentence_str = isinstance(sentences, str)
-        if is_sentence_str:
-            sentences = [sentences]
+        convert_to_csr_matrix: Optional[bool] = None,
+        convert_to_numpy: Optional[bool] = None,
+    ) -> Union[csr_matrix, np.ndarray]:
+        if convert_to_csr_matrix is None and convert_to_numpy is None:
+            convert_to_numpy = True
+        if convert_to_csr_matrix is True and convert_to_numpy is True:
+            raise ValueError(
+                "Only one of convert_to_csr_matrix or convert_to_numpy can be True"
+            )
 
-        all_embeddings = []
+        data = []
+        rows = []
+        cols = []
+        current_row = 0
+        vocab_size = None
 
         # Create iterator with tqdm if show_progress_bar is True
         iterator = tqdm(
@@ -108,56 +116,75 @@ class SpladeEmbedder:
 
             embeddings = embeddings.cpu()
 
-            all_embeddings.append(embeddings)
+            # Find non-zero elements
+            non_zero = embeddings.nonzero(as_tuple=False)
+            for nz in non_zero:
+                row = current_row + nz[0].item()
+                col = nz[1].item()
+                val = embeddings[nz[0], nz[1]].item()
+                rows.append(row)
+                cols.append(col)
+                data.append(val)
 
-        all_embeddings = torch.cat(all_embeddings, dim=0)
+            if vocab_size is None:
+                vocab_size = embeddings.size(1)
 
-        if convert_to_numpy:
-            all_embeddings = all_embeddings.cpu().numpy()
+            current_row += embeddings.size(0)
 
-        if is_sentence_str:
-            all_embeddings = all_embeddings[0]
+        if vocab_size is None:
+            vocab_size = 0
 
+        all_embeddings = csr_matrix(
+            (data, (rows, cols)), shape=(len(sentences), vocab_size)
+        )
+
+        if convert_to_csr_matrix:
+            # no-op
+            pass
+        elif convert_to_numpy:
+            all_embeddings = all_embeddings.toarray()
         return all_embeddings
 
     def similarity(
         self,
-        embeddings1: Union[np.ndarray, torch.Tensor],
-        embeddings2: Union[np.ndarray, torch.Tensor],
-    ) -> Union[np.ndarray, torch.Tensor]:
+        embeddings1: Union[np.ndarray, csr_matrix],
+        embeddings2: Union[np.ndarray, csr_matrix],
+    ) -> Union[np.ndarray, csr_matrix]:
+        """
+        Compute similarity between two sets of embeddings.
+
+        Args:
+            embeddings1 (Union[np.ndarray, csr_matrix]): The first set of embeddings.
+            embeddings2 (Union[np.ndarray, csr_matrix]): The second set of embeddings.
+
+        Returns:
+            Union[np.ndarray, csr_matrix]: The similarity matrix.
+        """
+        # Check if both embeddings are numpy arrays
         if isinstance(embeddings1, np.ndarray) and isinstance(embeddings2, np.ndarray):
             return np.dot(embeddings1, embeddings2.T)
-        elif isinstance(embeddings1, torch.Tensor) and isinstance(
-            embeddings2, torch.Tensor
+
+        # Check if both embeddings are csr_matrix
+        elif isinstance(embeddings1, csr_matrix) and isinstance(
+            embeddings2, csr_matrix
         ):
-            return torch.matmul(embeddings1, embeddings2.T)
+            return embeddings1.dot(embeddings2.T)
+
         else:
             raise ValueError(
-                "Both inputs must be of the same type (either numpy.ndarray or torch.Tensor)"
+                "Both inputs must be of the same type (either numpy.ndarray or csr_matrix)"
             )
 
-    def __call__(
-        self, sentences: Union[str, List[str]], **kwargs
-    ) -> Union[np.ndarray, torch.Tensor]:
+    def __call__(self, sentences: list[str], **kwargs):
         return self.encode(sentences, **kwargs)
 
     def get_token_values(
         self,
-        embedding: Union[np.ndarray, torch.Tensor],
+        embedding: Union[np.ndarray, csr_matrix],
         top_k: Optional[int] = None,
-    ) -> Dict[str, float]:
-        """
-        Get the token-value pairs from a SPLADE embedding.
-
-        Args:
-            embedding (Union[np.ndarray, torch.Tensor]): The SPLADE embedding.
-            top_k (Optional[int]): If specified, return only the top k token-value pairs.
-
-        Returns:
-            Dict[str, float]: A dictionary mapping tokens to their corresponding values.
-        """
-        if isinstance(embedding, torch.Tensor):
-            embedding = embedding.cpu().numpy()
+    ) -> dict[str, float]:
+        if isinstance(embedding, csr_matrix):
+            embedding = embedding.toarray()  # type: ignore
 
         if embedding.ndim > 1:
             embedding = embedding.squeeze()
