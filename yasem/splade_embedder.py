@@ -116,15 +116,14 @@ class SpladeEmbedder:
 
             embeddings = embeddings.cpu()
 
-            # Find non-zero elements
-            non_zero = embeddings.nonzero(as_tuple=False)
-            for nz in non_zero:
-                row = current_row + nz[0].item()
-                col = nz[1].item()
-                val = embeddings[nz[0], nz[1]].item()
-                rows.append(row)
-                cols.append(col)
-                data.append(val)
+            # Vectorized extraction of non-zero elements
+            rows_batch, cols_batch = embeddings.nonzero(as_tuple=True)
+            data_batch = embeddings[rows_batch, cols_batch]
+
+            # Adjust row indices
+            rows.extend((rows_batch + current_row).tolist())
+            cols.extend(cols_batch.tolist())
+            data.extend(data_batch.tolist())
 
             if vocab_size is None:
                 vocab_size = embeddings.size(1)
