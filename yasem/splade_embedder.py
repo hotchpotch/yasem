@@ -106,6 +106,8 @@ class SpladeEmbedder:
                 outputs = self.model(**inputs)
                 embeddings = self.splade_max(outputs.logits, inputs["attention_mask"])  # type: ignore
 
+            embeddings = embeddings.cpu()
+
             all_embeddings.append(embeddings)
 
         all_embeddings = torch.cat(all_embeddings, dim=0)
