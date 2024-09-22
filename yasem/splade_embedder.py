@@ -33,6 +33,7 @@ class SpladeEmbedder:
         model_kwargs: Optional[Dict] = None,
         tokenizer_kwargs: Optional[Dict] = None,
         config_kwargs: Optional[Dict] = None,
+        max_seq_length: int | None = 512,
         use_fp16: bool = True,
     ):
         self.model_name_or_path = model_name_or_path
@@ -73,6 +74,7 @@ class SpladeEmbedder:
             except Exception:
                 print("Warning: Could not convert model to FP16. Continuing with FP32.")
 
+        self.max_seq_length = max_seq_length
         self.vocab_size = self.tokenizer.vocab_size
         # Precompute token mapping for performance
         self.id_to_token = self.tokenizer.convert_ids_to_tokens(
@@ -86,6 +88,7 @@ class SpladeEmbedder:
         show_progress_bar: bool = False,
         convert_to_csr_matrix: Optional[bool] = None,
         convert_to_numpy: Optional[bool] = None,
+        device: Optional[Literal["cuda", "cpu", "mps", "npu"]] = None,
     ) -> Union[csr_matrix, np.ndarray]:
         if convert_to_csr_matrix is None and convert_to_numpy is None:
             convert_to_numpy = True
@@ -93,6 +96,9 @@ class SpladeEmbedder:
             raise ValueError(
                 "Only one of convert_to_csr_matrix or convert_to_numpy can be True"
             )
+
+        if device is None:
+            device = self.device  # type: ignore
 
         data = []
         rows = []
@@ -112,7 +118,11 @@ class SpladeEmbedder:
 
             # Tokenize and prepare input
             inputs = self.tokenizer(
-                batch, padding=True, truncation=True, return_tensors="pt"
+                batch,
+                padding=True,
+                truncation=True,
+                return_tensors="pt",
+                max_length=self.max_seq_length,
             ).to(self.device)
 
             # Get SPLADE embeddings
