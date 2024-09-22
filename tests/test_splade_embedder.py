@@ -24,7 +24,13 @@ def test_splade_embedder_np():
     assert similarity[0][1] > similarity[0][2]
     assert similarity[0][1] > similarity[1][2]
 
-    token_values = embedder.get_token_values(embeddings[0])
+    token_values: dict[str, float] = embedder.get_token_values(embeddings[0])  # type: ignore
+    assert "dog" in token_values
+    assert token_values["dog"] > 0.0
+    assert "ramen" not in token_values
+
+    token_values_list: list[dict[str, float]] = embedder.get_token_values(embeddings)  # type: ignore
+    token_values = token_values_list[0]
     assert "dog" in token_values
     assert token_values["dog"] > 0.0
     assert "ramen" not in token_values
@@ -49,7 +55,13 @@ def test_splade_embedder_csr_matrix():
     assert similarity[0][1] > similarity[0][2]
     assert similarity[0][1] > similarity[1][2]
 
-    token_values = embedder.get_token_values(embeddings[0])
+    token_values: dict[str, float] = embedder.get_token_values(embeddings[0])  # type: ignore
+    assert "dog" in token_values
+    assert token_values["dog"] > 0.0
+    assert "ramen" not in token_values
+
+    token_values_list: list[dict[str, float]] = embedder.get_token_values(embeddings)  # type: ignore
+    token_values = token_values_list[0]
     assert "dog" in token_values
     assert token_values["dog"] > 0.0
     assert "ramen" not in token_values
