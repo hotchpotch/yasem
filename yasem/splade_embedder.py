@@ -20,8 +20,17 @@ class SpladeEmbedder:
         Returns:
             torch.Tensor: The SPLADE embedding.
         """
+        if logits.dim() != 3 or attention_mask.dim() != 2:
+            raise ValueError("Invalid input dimensions")
+
+        if logits.size(0) != attention_mask.size(0) or logits.size(
+            1
+        ) != attention_mask.size(1):
+            raise ValueError("Mismatched batch size or sequence length")
+
         embeddings = torch.log(1 + torch.relu(logits)) * attention_mask.unsqueeze(-1)
-        return embeddings.sum(dim=1)
+        # Perform max pooling instead of sum pooling
+        return torch.max(embeddings, dim=1).values
 
     def __init__(
         self,

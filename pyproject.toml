@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yasem"
-version = "0.3.0"
+version = "0.3.1"
 description = "YASEM - Yet Another Splade|Sparse Embedder - A simple and efficient library for SPLADE embeddings"
 authors = ["Yuichi Tateno <hotchpotch@gmail.com>"]
 readme = "README.md"
