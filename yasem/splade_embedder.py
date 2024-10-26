@@ -46,7 +46,7 @@ class SpladeEmbedder:
         use_fp16: bool = True,
     ):
         self.model_name_or_path = model_name_or_path
-        self.device = (
+        self.device: Literal["cuda", "cpu", "mps", "npu"] = (
             device if device else ("cuda" if torch.cuda.is_available() else "cpu")
         )
 
@@ -132,7 +132,7 @@ class SpladeEmbedder:
                 truncation=True,
                 return_tensors="pt",
                 max_length=self.max_seq_length,
-            ).to(self.device)
+            ).to(device)
 
             # Get SPLADE embeddings
             with torch.no_grad():
@@ -141,25 +141,20 @@ class SpladeEmbedder:
 
             embeddings = embeddings.cpu()
 
-            # Vectorized extraction of non-zero elements
-            if isinstance(embeddings, torch.Tensor):
-                embeddings_np = embeddings.numpy()
-            else:
-                embeddings_np = embeddings
-
-            non_zero = embeddings_np > 0
-            rows_batch, cols_batch = np.nonzero(non_zero)
-            data_batch = embeddings_np[non_zero]
+            # Use torch operations to find non-zero elements
+            non_zero = embeddings > 0
+            rows_batch, cols_batch = torch.nonzero(non_zero, as_tuple=True)
+            data_batch = embeddings[non_zero].tolist()
 
             # Adjust row indices
             rows.extend((rows_batch + current_row).tolist())
             cols.extend(cols_batch.tolist())
-            data.extend(data_batch.tolist())
+            data.extend(data_batch)
 
             if vocab_size is None:
-                vocab_size = embeddings_np.shape[1]
+                vocab_size = embeddings.size(1)
 
-            current_row += embeddings_np.shape[0]
+            current_row += embeddings.size(0)
 
         if vocab_size is None:
             vocab_size = 0
