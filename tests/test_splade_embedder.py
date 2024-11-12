@@ -73,3 +73,13 @@ def test_encode_args_error():
         embedder.encode(
             ["Hello, my dog is cute"], convert_to_csr_matrix=True, convert_to_numpy=True
         )
+
+
+@pytest.mark.only()
+def test_subword_pooling_mean():
+    model_name = "/home/hotchpotch/src/github.com/hotchpotch/splade-labs/output/ruri_b_subword_mean_mm_hn_v1_e3_bs128_flops"
+    embedder = SpladeEmbedder(model_name, device="cuda")
+    sentences = ["こんにちは、可愛い犬ですね。"]
+    embeddings = embedder.encode(sentences)
+    token_values = embedder.get_token_values(embeddings[0])
+    print(token_values)

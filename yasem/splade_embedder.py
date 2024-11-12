@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List, Literal, Optional, Union
 
 import numpy as np
@@ -5,6 +6,11 @@ import torch
 from scipy.sparse import csr_matrix
 from tqdm import tqdm
 from transformers import AutoConfig, AutoModelForMaskedLM, AutoTokenizer
+
+from .subword import SpladeSubwordProcessor
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class SpladeEmbedder:
@@ -44,6 +50,8 @@ class SpladeEmbedder:
         config_kwargs: Optional[Dict] = None,
         max_seq_length: int | None = 512,
         use_fp16: bool = True,
+        subword_pooling: Literal["max", "mean"] | None = None,
+        subword_prefix: str = "##",
     ):
         self.model_name_or_path = model_name_or_path
         self.device: Literal["cuda", "cpu", "mps", "npu"] = (
@@ -81,7 +89,9 @@ class SpladeEmbedder:
             try:
                 self.model = self.model.half()
             except Exception:
-                print("Warning: Could not convert model to FP16. Continuing with FP32.")
+                logger.info(
+                    "Warning: Could not convert model to FP16. Continuing with FP32."
+                )
 
         self.max_seq_length = max_seq_length
         self.vocab_size = self.tokenizer.vocab_size
@@ -89,6 +99,32 @@ class SpladeEmbedder:
         self.id_to_token = self.tokenizer.convert_ids_to_tokens(
             list(range(self.vocab_size))
         )
+        if subword_pooling is not None:
+            self.subword_processor = SpladeSubwordProcessor(
+                self.tokenizer,
+                subword_prefix=subword_prefix,
+                pooling_type=subword_pooling,
+            )
+        else:
+            self.subword_processor = None
+            # for debugging
+            if "subword" in model_name_or_path:
+                # model_name_or_path に subword を含む場合
+                if "max" in model_name_or_path:
+                    subword_pooling = "max"
+                elif "mean" in model_name_or_path:
+                    subword_pooling = "mean"
+                else:
+                    subword_pooling = "max"
+                subword_pooling = "max"
+                logger.info(
+                    f"force subword_pooling: {subword_pooling}, subword_prefix: {subword_prefix}"
+                )
+                self.subword_processor = SpladeSubwordProcessor(
+                    self.tokenizer,
+                    subword_prefix=subword_prefix,
+                    pooling_type=subword_pooling,
+                )
 
     def encode(
         self,
@@ -133,11 +169,23 @@ class SpladeEmbedder:
                 return_tensors="pt",
                 max_length=self.max_seq_length,
             ).to(device)
+            if self.subword_processor is None:
+                subword_indices = None
+            else:
+                subword_indices = self.subword_processor.create_subword_indices(
+                    inputs["input_ids"]  # type: ignore
+                ).to(device)
 
             # Get SPLADE embeddings
             with torch.no_grad():
                 outputs = self.model(**inputs)
                 embeddings = self.splade_max(outputs.logits, inputs["attention_mask"])  # type: ignore
+                if subword_indices is not None and self.subword_processor is not None:
+                    embeddings = self.subword_processor.aggregate_subwords(
+                        embeddings,
+                        inputs["input_ids"],  # type: ignore
+                        subword_indices,
+                    )
 
             embeddings = embeddings.cpu()
 
