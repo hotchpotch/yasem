@@ -1,10 +1,19 @@
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, TypedDict, Union
 
 import numpy as np
 import torch
 from scipy.sparse import csr_matrix
 from tqdm import tqdm
 from transformers import AutoConfig, AutoModelForMaskedLM, AutoTokenizer
+
+
+class RankResult(TypedDict):
+    corpus_id: int
+    score: float
+
+
+class RankResultWithText(RankResult):
+    text: str
 
 
 class SpladeEmbedder:
@@ -267,4 +276,63 @@ class SpladeEmbedder:
 
         if len(results) == 1:
             return results[0]
+        return results
+
+    def rank(
+        self,
+        query: str,
+        documents: List[str],
+        return_documents: bool = False,
+        batch_size: int = 32,
+        show_progress_bar: bool = False,
+    ) -> Union[List[RankResult], List[RankResultWithText]]:
+        """
+        Rank documents based on their similarity to a query.
+
+        Args:
+            query (str): The query string.
+            documents (List[str]): List of documents to rank.
+            return_documents (bool, optional): Whether to include the document text in results. Defaults to False.
+            batch_size (int, optional): Batch size for encoding. Defaults to 32.
+            show_progress_bar (bool, optional): Whether to show progress bar. Defaults to False.
+
+        Returns:
+            Union[List[RankResult], List[RankResultWithText]]: List of dictionaries containing ranking results,
+            sorted by score in descending order.
+        """
+        # Encode query and documents
+        query_embedding = self.encode(
+            [query],
+            batch_size=batch_size,
+            show_progress_bar=show_progress_bar,
+        )
+        doc_embeddings = self.encode(
+            documents,
+            batch_size=batch_size,
+            show_progress_bar=show_progress_bar,
+        )
+
+        # Calculate similarities
+        similarities = self.similarity(query_embedding, doc_embeddings)
+        if isinstance(similarities, csr_matrix):
+            similarities = similarities.toarray()
+
+        # Extract scores from the similarity matrix
+        scores = similarities[0]  # Take first row as we only have one query
+
+        if return_documents:
+            results_with_text: List[RankResultWithText] = []
+            for idx, score in enumerate(scores):
+                result_with_text: RankResultWithText = {
+                    "corpus_id": idx,
+                    "score": float(score),
+                    "text": documents[idx],
+                }
+                results_with_text.append(result_with_text)
+            return results_with_text
+
+        results: List[RankResult] = []
+        for idx, score in enumerate(scores):
+            result: RankResult = {"corpus_id": idx, "score": float(score)}
+            results.append(result)
         return results
