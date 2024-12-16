@@ -1,6 +1,6 @@
 [project]
 name = "yasem"
-version = "0.4.0"
+version = "0.4.1"
 description = "YASEM - Yet Another Splade|Sparse Embedder - A simple and efficient library for SPLADE embeddings"
 authors = [
     { name = "Yuichi Tateno", email = "hotchpotch@gmail.com" }
