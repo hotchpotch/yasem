@@ -329,10 +329,12 @@ class SpladeEmbedder:
                     "text": documents[idx],
                 }
                 results_with_text.append(result_with_text)
+            results_with_text.sort(key=lambda x: x["score"], reverse=True)
             return results_with_text
 
         results: List[RankResult] = []
         for idx, score in enumerate(scores):
             result: RankResult = {"corpus_id": idx, "score": float(score)}
             results.append(result)
+        results.sort(key=lambda x: x["score"], reverse=True)
         return results
