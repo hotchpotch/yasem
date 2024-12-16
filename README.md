@@ -62,6 +62,44 @@ print(token_values)
 #  'hello': 2.73046875, 'you': 2.435546875, 'like': 2.26953125, 'taste': 1.8203125,
 ```
 
+## rank API
+
+```python
+# Rank documents based on query
+query = "What programming language is best for machine learning?"
+documents = [
+   "Python is widely used in machine learning due to its extensive libraries like TensorFlow and PyTorch",
+   "JavaScript is primarily used for web development and front-end applications", 
+   "SQL is essential for database management and data manipulation"
+]
+
+# Get ranked results with relevance scores
+results = embedder.rank(query, documents)
+print(results)
+# [
+#   {'corpus_id': 0, 'score': 12.453},  # Python/ML document ranks highest
+#   {'corpus_id': 2, 'score': 5.234},
+#   {'corpus_id': 1, 'score': 3.123}
+# ]
+
+# Get ranked results including document text
+results = embedder.rank(query, documents, return_documents=True)
+print(results)  
+# [
+#   {
+#     'corpus_id': 0,
+#     'score': 12.453,
+#     'text': 'Python is widely used in machine learning due to its extensive libraries like TensorFlow and PyTorch'
+#   },
+#   {
+#     'corpus_id': 2, 
+#     'score': 5.234,
+#     'text': 'SQL is essential for database management and data manipulation'
+#   },
+#   ...
+# ]
+```
+
 ## Features
 
 - Easy-to-use API inspired by SentenceTransformers
