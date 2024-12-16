@@ -21,4 +21,5 @@ dependencies = [
 dev = [
     "ruff>=0.8.3",
     "pytest>=8.3.2",
+    "pytest-only>=2.1.2",
 ]

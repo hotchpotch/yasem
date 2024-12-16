@@ -476,6 +476,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-only"
+version = "2.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1f/2f/937d554943477a540aa2aae2b4c47ad41c2f089f47691288938c67e94143/pytest_only-2.1.2.tar.gz", hash = "sha256:e341acc083e3bb66debc660b7d5d71ae3b31da5edc2a737280d7304221ab0c29", size = 4863 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/95/3cf1a035048ee224a5dc701a3f41a5ec8684b030d217517bdf7da2f545aa/pytest_only-2.1.2-py3-none-any.whl", hash = "sha256:04dffe2aed64a741145ce5ad25b5df3ae4212e01ff885a8821fd2318eb509e91", size = 6456 },
+]
+
+[[package]]
 name = "pyyaml"
 version = "6.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -966,7 +978,7 @@ wheels = [
 
 [[package]]
 name = "yasem"
-version = "0.3.2"
+version = "0.4.0"
 source = { virtual = "." }
 dependencies = [
     { name = "numpy" },
@@ -978,6 +990,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "pytest-only" },
     { name = "ruff" },
 ]
 
@@ -992,5 +1005,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=8.3.2" },
+    { name = "pytest-only", specifier = ">=2.1.2" },
     { name = "ruff", specifier = ">=0.8.3" },
 ]
