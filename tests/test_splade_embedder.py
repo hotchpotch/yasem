@@ -4,6 +4,7 @@ import pytest
 import scipy.sparse
 
 from yasem import SpladeEmbedder
+from yasem.splade_embedder import RankResult, RankResultWithText
 
 SPLADE_MODEL = "naver/splade-v3"
 
@@ -73,3 +74,52 @@ def test_encode_args_error():
         embedder.encode(
             ["Hello, my dog is cute"], convert_to_csr_matrix=True, convert_to_numpy=True
         )
+
+
+def test_rank_without_documents():
+    embedder = SpladeEmbedder(SPLADE_MODEL)
+    query = "What programming language is best for machine learning?"
+    documents = [
+        "Python is widely used in machine learning due to its extensive libraries like TensorFlow and PyTorch",
+        "JavaScript is primarily used for web development and front-end applications",
+        "SQL is essential for database management and data manipulation",
+    ]
+
+    results: list[RankResult] = embedder.rank(query, documents)  # type: ignore
+
+    assert len(results) == 3
+    assert isinstance(results[0]["corpus_id"], int)
+    assert isinstance(results[0]["score"], float)
+    assert "text" not in results[0]
+
+    # First result should be about Python and ML
+    assert results[0]["corpus_id"] == 0
+    # Score ordering should be maintained
+    assert results[0]["score"] > results[1]["score"]
+    assert results[1]["score"] > results[2]["score"]
+
+
+def test_rank_with_documents():
+    embedder = SpladeEmbedder(SPLADE_MODEL)
+    query = "What programming language is best for machine learning?"
+    documents = [
+        "Python is widely used in machine learning due to its extensive libraries like TensorFlow and PyTorch",
+        "JavaScript is primarily used for web development and front-end applications",
+        "SQL is essential for database management and data manipulation",
+    ]
+
+    results: list[RankResultWithText] = embedder.rank(
+        query, documents, return_documents=True
+    )  # type: ignore
+
+    assert len(results) == 3
+    assert isinstance(results[0]["corpus_id"], int)
+    assert isinstance(results[0]["score"], float)
+    assert isinstance(results[0]["text"], str)
+    assert results[0]["text"] == documents[results[0]["corpus_id"]]
+
+    assert results[0]["corpus_id"] == 0
+    assert "PyTorch" in results[0]["text"]
+    # Score ordering should be maintained
+    assert results[0]["score"] > results[1]["score"]
+    assert results[1]["score"] > results[2]["score"]

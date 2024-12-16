@@ -259,7 +259,7 @@ class SpladeEmbedder:
             elif embedding.ndim != 2:
                 raise ValueError("csr_matrix input must be 1D or 2D")
 
-            results = [process_csr_matrix(emb) for emb in embedding]
+            results = [process_csr_matrix(emb) for emb in embedding]  # type: ignore
 
         elif isinstance(embedding, np.ndarray):
             if embedding.ndim == 1:
